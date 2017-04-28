@@ -7,7 +7,7 @@ import scala.concurrent.Future
  */
 trait TicketReservation {
 
-  def register(reserv: MovieReservation): Future[Unit]
+  def register(movie: Movie): Future[Unit]
 
   def reserve(id: MovieId): Future[Boolean]
 

@@ -9,6 +9,7 @@ object TicketSeller {
 
   sealed trait TicketsAction
   case object Buy extends TicketsAction
+  case object AvailableSeats extends TicketsAction
 
   def props(availableSeats: Int): Props = Props(classOf[TicketSeller], availableSeats)
 }
@@ -23,6 +24,7 @@ class TicketSeller(avaliableSeats: Int) extends Actor {
       boughtSeats += 1
       sender() ! true
     case Buy => sender() ! false
+    case AvailableSeats => sender() ! (avaliableSeats - boughtSeats)
     case _ => println("Should be never called")
   }
 
