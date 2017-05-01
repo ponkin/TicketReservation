@@ -1,16 +1,16 @@
 package com.github.ponkin.tr
 
 import akka.actor.ActorSystem
-import akka.testkit.{TestKit, TestProbe}
-import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, MustMatchers}
+import akka.testkit.{ TestKit, TestProbe }
+import org.scalatest.{ BeforeAndAfterAll, FlatSpecLike, MustMatchers }
 
 /**
-  * Created by aponkin on 28.04.2017.
-  */
+ * Testing Ticket seller API
+ */
 class TicketSellerSpec extends TestKit(ActorSystem("test-ticket-selelr"))
-                       with FlatSpecLike
-                       with BeforeAndAfterAll
-                       with MustMatchers {
+    with FlatSpecLike
+    with BeforeAndAfterAll
+    with MustMatchers {
 
   override def afterAll = {
     TestKit.shutdownActorSystem(system)
