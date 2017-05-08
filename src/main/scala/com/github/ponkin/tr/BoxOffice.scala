@@ -26,7 +26,7 @@ class BoxOffice(implicit timeout: Timeout) extends Actor {
     case Buy(id) =>
       val key = s"${id.imdbId}_${id.screenId}"
       def soldOut() = sender() ! false
-      context.child(key).fold(soldOut())(_.forward(TicketSeller.Buy))
+      context.child(key).fold(soldOut)(_.forward(TicketSeller.Buy))
     case Register(movie) =>
       val key = s"${movie.imdbId}_${movie.screenId}"
       if (movies.contains(key)) {
@@ -47,7 +47,7 @@ class BoxOffice(implicit timeout: Timeout) extends Actor {
           movie.map(toInfo(n))
         }
       }
-      val result = context.child(key).fold(soldOut())(availableSeats)
+      val result = context.child(key).fold(soldOut)(availableSeats)
       val sndr = sender()
       result.onSuccess {
         case m => sndr ! m

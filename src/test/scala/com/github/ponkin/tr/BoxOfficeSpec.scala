@@ -22,7 +22,7 @@ class BoxOfficeSpec extends TestKit(ActorSystem("test-movie-registry"))
   implicit val timeout = new Timeout(20 seconds)
 
   val movie = Movie("id1", "screen1", "title", 10)
-  val minfo = MovieInfo(movie.imdbId, movie.screenId, movie.movieTitle, movie.availableSeats, 10)
+  val minfo = MovieInfo(movie.imdbId, movie.screenId, movie.movieTitle, movie.availableSeats, 0)
   val movieId = MovieId("id1", "screen1")
 
   "Box office" should "properly store movies" in {
@@ -51,7 +51,7 @@ class BoxOfficeSpec extends TestKit(ActorSystem("test-movie-registry"))
     //Check valid state
     sender.send(bo, BoxOffice.Info(movieId))
     val info = sender.expectMsgType[Option[MovieInfo]]
-    info.get.reservedSeats must equal(9)
+    info.get.reservedSeats must equal(1)
   }
 
 }
