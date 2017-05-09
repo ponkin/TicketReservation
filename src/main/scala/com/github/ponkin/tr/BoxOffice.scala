@@ -1,6 +1,7 @@
 package com.github.ponkin.tr
 
-import akka.actor.{ Actor, Props, ActorRef }
+import akka.actor.{ Actor, Props, ActorRef, ActorLogging }
+import akka.persistence.{ PersistentActor, SnapshotOffer }
 import akka.util.Timeout
 
 import scala.concurrent.Future
@@ -12,17 +13,34 @@ object BoxOffice {
   case class Info(id: MovieId) extends OfficeApi
   case class Buy(id: MovieId) extends OfficeApi
 
+  sealed trait Event
+  case class Append(movie: Movie) extends Event
+
   def props(implicit timeout: Timeout): Props = Props(classOf[BoxOffice], timeout)
 }
 
-class BoxOffice(implicit timeout: Timeout) extends Actor {
+class BoxOffice(implicit timeout: Timeout) extends PersistentActor
+    with ActorLogging {
+
+  override def persistenceId = "box-office"
 
   import BoxOffice._
   import context._
 
   var movies: Map[String, Movie] = Map()
 
-  def receive = {
+  private[this] def append(movie: Movie) = {
+    val key = s"${movie.imdbId}_${movie.screenId}"
+    movies += (key -> movie)
+    takeSnapshot()
+  }
+
+  val receiveRecover: Receive = {
+    case Append(movie) => append(movie)
+    case SnapshotOffer(_, snapshot: Map[String, Movie]) => movies = snapshot
+  }
+
+  val receiveCommand: Receive = {
     case Buy(id) =>
       val key = s"${id.imdbId}_${id.screenId}"
       def soldOut() = sender() ! false
@@ -32,9 +50,12 @@ class BoxOffice(implicit timeout: Timeout) extends Actor {
       if (movies.contains(key)) {
         sender() ! false
       } else {
-        movies += (key -> movie)
-        context.actorOf(TicketSeller.props(movie.availableSeats), key)
-        sender() ! true
+        val sndr = sender()
+        persist(Append(movie)) { _ =>
+          append(movie)
+          context.actorOf(TicketSeller.props(key, movie.availableSeats), key)
+          sndr ! true
+        }
       }
     case Info(id) =>
       import akka.pattern.ask
@@ -43,7 +64,7 @@ class BoxOffice(implicit timeout: Timeout) extends Actor {
       val movie = movies.get(key)
       def soldOut() = Future(movie.map(toInfo(0)))
       def availableSeats(child: ActorRef) = {
-        child.ask(TicketSeller.AvailableSeats).mapTo[Int].map { n =>
+        child.ask(TicketSeller.SoldSeats).mapTo[Int].map { n =>
           movie.map(toInfo(n))
         }
       }
@@ -52,6 +73,15 @@ class BoxOffice(implicit timeout: Timeout) extends Actor {
       result.onSuccess {
         case m => sndr ! m
       }
+  }
+
+  /**
+   * Store snapshot for every 100 elements in map
+   */
+  private[this] def takeSnapshot() = {
+    if(movies.size % 100 == 0) {
+      saveSnapshot(movies)
+    }
   }
 
   private[this] def toInfo(reserved: Int)(m: Movie): MovieInfo =

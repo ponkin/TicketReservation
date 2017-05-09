@@ -8,6 +8,8 @@ packageSummary in Docker := "Ticket reservation system"
 
 dockerExposedPorts ++= Seq(8080)
 
+dockerExposedVolumes ++= Seq("data")
+
 daemonUser := "tss"
 
 dockerRepository := Some("ponkin")
@@ -44,10 +46,14 @@ lazy val root = (project in file("."))
     "com.github.melrief" %% "pureconfig" % "0.4.0",
     "com.typesafe.akka"  %% "akka-actor" % akkaV,
     "com.typesafe.akka" %% "akka-stream" % akkaV,
+    "com.typesafe.akka" %% "akka-persistence" % akkaV,
+    "org.iq80.leveldb"  % "leveldb" % "0.9",
+    "org.fusesource.leveldbjni" % "leveldbjni-all"  % "1.8",
+    "com.github.dnvriend" %% "akka-persistence-inmemory" % "2.5.1.0" % "test",
     "com.typesafe.akka"  %% "akka-http" % akkaHttpV,
     "com.typesafe.akka"  %% "akka-http-spray-json" % akkaHttpV,
     "com.typesafe.akka" %% "akka-http-testkit" % akkaHttpV,
     "com.typesafe.akka" %% "akka-testkit" % akkaV % "test",
     "org.scalatest" %% "scalatest" % "3.0.1" % "test"
   )
-)
+).settings( parallelExecution in Test := false : _*)

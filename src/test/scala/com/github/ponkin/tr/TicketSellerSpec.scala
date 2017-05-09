@@ -18,18 +18,18 @@ class TicketSellerSpec extends TestKit(ActorSystem("test-ticket-selelr"))
 
   "TickerSeller" should "decrease number of available seats after buy" in {
     val sender = TestProbe()
-    val seller = system.actorOf(TicketSeller.props(2))
+    val seller = system.actorOf(TicketSeller.props("test", 2))
     sender.send(seller, TicketSeller.Buy) // buy one ticket
     val sold = sender.expectMsgType[Boolean]
     sold must equal(true)
-    sender.send(seller, TicketSeller.AvailableSeats)
+    sender.send(seller, TicketSeller.SoldSeats)
     val stillAvailable = sender.expectMsgType[Int]
     stillAvailable must equal(1)
   }
 
   "TicketSeller" should "return false if sold out" in {
     val sender = TestProbe()
-    val seller = system.actorOf(TicketSeller.props(0))
+    val seller = system.actorOf(TicketSeller.props("test1", 0))
     sender.send(seller, TicketSeller.Buy) // buy one ticket
     val sold = sender.expectMsgType[Boolean]
     sold must equal(false)

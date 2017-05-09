@@ -41,15 +41,15 @@ class BoxOfficeSpec extends TestKit(ActorSystem("test-movie-registry"))
   "Box office" should "properly buy ticket" in {
     val sender = TestProbe()
     val bo = system.actorOf(BoxOffice.props)
-    sender.send(bo, BoxOffice.Register(movie))
+    sender.send(bo, BoxOffice.Register(Movie("id2", "screen2", "title", 10)))
     val wasAdded = sender.expectMsgType[Boolean]
     wasAdded must equal(true)
     // buy ticket
-    sender.send(bo, BoxOffice.Buy(movieId))
+    sender.send(bo, BoxOffice.Buy(MovieId("id2", "screen2")))
     val success = sender.expectMsgType[Boolean]
     success must equal(true)
     //Check valid state
-    sender.send(bo, BoxOffice.Info(movieId))
+    sender.send(bo, BoxOffice.Info(MovieId("id2", "screen2")))
     val info = sender.expectMsgType[Option[MovieInfo]]
     info.get.reservedSeats must equal(1)
   }
